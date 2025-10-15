@@ -59,8 +59,8 @@ resource "kubernetes_namespace" "argocd" {
   }
 }
 
-### [CERT-MANAGER - ONly if NOT using Azure WebAPP ROUting] ###
-# Deploy cert-manager (only if NOT using Azure Web App Routing)
+### [CERT-MANAGER] ###
+# Deploy cert-manager
 resource "helm_release" "cert_manager" {
   count = var.deploy_cert_manager ? 1 : 0
 
