@@ -1,0 +1,12 @@
+variable "resource_group_name" {}
+variable "location" {}
+variable "aks_name" {}
+variable "argocd_config" {}
+variable "namespace" {}
+variable "ingress_class_name" {}
+variable "dnszone_resourcegroup_name" {}
+variable "dns_name" {}
+variable "cluster_issuer" {}
+variable "create_cluster_issuer" {}
+variable "letsencrypt_email" {}
+variable "deploy_cert_manager" {}

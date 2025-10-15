@@ -1,0 +1,91 @@
+global:
+  domain: ${hostname}
+
+controller:
+  replicas: 1
+  %{ if autoscaling_enabled }
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  %{ endif }
+
+dex:
+  enabled: true
+
+server:
+  replicas: 1
+  %{ if autoscaling_enabled }
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 2
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 70
+  %{ endif }
+  
+  service:
+    type: ClusterIP
+    
+  ingress:
+    enabled: ${hostname != "" ? "true" : "false"}
+    %{ if hostname != "" }
+    ingressClassName: ${ingress_class_name}
+    hostname: ${hostname}
+    annotations:
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+      cert-manager.io/cluster-issuer: ${cluster_issuer}
+    tls: true
+    %{ endif }
+  
+  config:
+    server.insecure: true
+    server.grpc.web: true
+    application.instanceLabelKey: argocd.argoproj.io/instance
+
+repoServer:
+  replicas: 1
+  %{ if autoscaling_enabled }
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 2
+    targetCPUUtilizationPercentage: 50
+    targetMemoryUtilizationPercentage: 50
+  %{ endif }
+
+applicationSet:
+  enabled: true
+  replicas: 1
+
+redis:
+  enabled: true
+  
+redis-ha:
+  enabled: ${redis_ha_enabled}
+  %{ if redis_ha_enabled }
+  haproxy:
+    enabled: true
+    replicas: 2
+  redis:
+    masterGroupName: argocd
+    config:
+      save: '""'
+    replicas: 3
+  sentinel:
+    replicas: 3
+  %{ endif }
+
+# RBAC configuration
+configs:
+  rbac:
+    policy.default: role:readonly
+    policy.csv: |
+      p, role:admin, applications, *, */*, allow
+      p, role:admin, clusters, *, *, allow
+      p, role:admin, repositories, *, *, allow
+      g, argocd-admins, role:admin
